@@ -12,13 +12,22 @@ import org.agrona.LangUtil;
 import org.agrona.collections.MutableInteger;
 import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.status.CountersReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -26,8 +35,16 @@ import static io.aeron.CncFileDescriptor.*;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
-public class SamplesUtil
-{
+public class SamplesUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(SamplesUtil.class);
+    ConcurrentLinkedQueue<String> latencies = new ConcurrentLinkedQueue<>();
+
+    public SamplesUtil() {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(this::evaluateLatencies, 0, 1, TimeUnit.MINUTES);  // Run every minute
+    }
+
     /**
      * Return a reusable, parametrised event loop that calls a default {@link IdleStrategy} when no messages
      * are received.
@@ -76,8 +93,9 @@ public class SamplesUtil
      * @param streamId to show when printing.
      * @return subscription data handler function that prints the message contents.
      */
-    public static FragmentHandler printAsciiMessage(final int streamId)
+    public FragmentHandler printAsciiMessage(final int streamId)
     {
+
         return (buffer, offset, length, header) -> {
             // Extract the message
             final String msg = buffer.getStringWithoutLengthAscii(offset, length);
@@ -88,8 +106,8 @@ public class SamplesUtil
             try {
                 long publishingTimestamp = Long.parseLong(publishingTimestampStr);
                 long receivingTimestamp = Instant.now().toEpochMilli();
-
                 long latency = receivingTimestamp - publishingTimestamp;
+                latencies.add(String.valueOf(latency));
 
                 System.out.printf(
                         "Message to stream %d from session %d (%d@%d) <<%s>> - Latency: %d ms%n",
@@ -100,6 +118,41 @@ public class SamplesUtil
                         streamId, header.sessionId(), length, offset, msg);
             }
         };
+    }
+
+    private void evaluateLatencies() {
+        List<String> latenciesList = new ArrayList<>(latencies);
+        if (!latenciesList.isEmpty()) {
+            List<Long> latencyValues = new ArrayList<>();
+            for (String latencyStr : latenciesList) {
+                try {
+                    latencyValues.add(Long.parseLong(latencyStr));
+                } catch (NumberFormatException e) {
+                    log.error("Error parsing latency: {}", e.getMessage());
+                }
+            }
+            // Calculate statistics
+            if (!latencyValues.isEmpty()) {
+                long sum = latencyValues.stream().mapToLong(Long::longValue).sum();
+                double avgLatency = sum / (double) latencyValues.size();
+                long maxLatency = latencyValues.stream().mapToLong(Long::longValue).max().orElse(0L);
+
+                latencyValues.sort(Long::compare);
+                long p50 = latencyValues.get((int) (latencyValues.size() * 0.5));
+                long p90 = latencyValues.get((int) (latencyValues.size() * 0.9));
+                long p99 = latencyValues.get((int) (latencyValues.size() * 0.99));
+
+                log.info("Latency Stats for the last minute:");
+                log.info("Average Latency: {} ms", avgLatency);
+                log.info("Max Latency: {} ms", maxLatency);
+                log.info("50th Percentile (Median) Latency: {} ms", p50);
+                log.info("90th Percentile Latency: {} ms", p90);
+                log.info("99th Percentile Latency: {} ms", p99);
+            }
+            latencies.clear();
+        } else {
+            log.info("No latency data to evaluate in the last minute.");
+        }
     }
 
     /**
