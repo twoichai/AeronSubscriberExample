@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -77,12 +78,27 @@ public class SamplesUtil
      */
     public static FragmentHandler printAsciiMessage(final int streamId)
     {
-        return (buffer, offset, length, header) ->
-        {
+        return (buffer, offset, length, header) -> {
+            // Extract the message
             final String msg = buffer.getStringWithoutLengthAscii(offset, length);
-            System.out.printf(
-                    "Message to stream %d from session %d (%d@%d) <<%s>>%n",
-                    streamId, header.sessionId(), length, offset, msg);
+
+            String[] parts = msg.split(" ");
+            String publishingTimestampStr = parts[parts.length - 1]; // Last part should be the timestamp
+
+            try {
+                long publishingTimestamp = Long.parseLong(publishingTimestampStr);
+                long receivingTimestamp = Instant.now().toEpochMilli();
+
+                long latency = receivingTimestamp - publishingTimestamp;
+
+                System.out.printf(
+                        "Message to stream %d from session %d (%d@%d) <<%s>> - Latency: %d ms%n",
+                        streamId, header.sessionId(), length, offset, msg, latency);
+            } catch (NumberFormatException e) {
+                System.out.printf(
+                        "Message to stream %d from session %d (%d@%d) <<%s>> - Unable to parse timestamp%n",
+                        streamId, header.sessionId(), length, offset, msg);
+            }
         };
     }
 

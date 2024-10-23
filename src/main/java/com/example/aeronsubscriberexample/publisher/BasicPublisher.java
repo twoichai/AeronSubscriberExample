@@ -8,6 +8,7 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,8 +54,8 @@ public class BasicPublisher implements CommandLineRunner {
             for (long i = 0; i < NUMBER_OF_MESSAGES; i++)
             {
                 System.out.print("Offering " + i + "/" + NUMBER_OF_MESSAGES + " - ");
-
-                final int length = buffer.putStringWithoutLengthAscii(0, "Hello World! " + i);
+                String publishingTimestamp = String.valueOf(Instant.now().toEpochMilli());
+                final int length = buffer.putStringWithoutLengthAscii(0, "Hello World! " + i + " " + publishingTimestamp);
                 final long position = publication.offer(buffer, 0, length);
 
                 if (position > 0)
