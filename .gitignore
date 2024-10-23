@@ -1,0 +1,64 @@
+### Gradle ###
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+.gradle/caches/
+.gradle/gradle-app-version-metadata.bin
+.gradle/dependency-locking/
+.gradle/noVersionPluginRegistry.bin
+
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+
+### Spring Boot ###
+/target/
+/out/
+/bin/
+/build/
+
+### Lombok ###
+**/lombok.config
+
+### Logs ###
+*.log
+/logs/
+/*.log
+/*.log.*
+
+### IntelliJ IDEA ###
+.idea
+*.iml
+*.ipr
+*.iws
+.idea/
+/out/
+
+### VS Code ###
+.vscode/
+
+### Eclipse ###
+.project
+.classpath
+.settings/
+.springBeans
+.springTools
+
+### Maven ###
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+
+### OS generated ###
+.DS_Store
+Thumbs.db
+.idea_modules
+.classpath
+.project
+*.swp
+*.swo
+
+### Other ###
+.env
+*.tmp
