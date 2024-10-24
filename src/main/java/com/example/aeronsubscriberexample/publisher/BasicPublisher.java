@@ -3,12 +3,15 @@ package com.example.aeronsubscriberexample.publisher;
 import com.example.aeronsubscriberexample.config.SampleConfiguration;
 import io.aeron.Aeron;
 import io.aeron.Publication;
+import lombok.RequiredArgsConstructor;
 import org.agrona.BufferUtil;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.UUID;
+
 
 @Component
 public class BasicPublisher implements CommandLineRunner {
@@ -19,8 +22,6 @@ public class BasicPublisher implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //System.out.println("Publishing to " + CHANNEL + " on stream id " + STREAM_ID);
-
         final Aeron.Context ctx = new Aeron.Context();
 
         try (Aeron aeron = Aeron.connect(ctx);
@@ -32,29 +33,29 @@ public class BasicPublisher implements CommandLineRunner {
             long startTime = System.currentTimeMillis();
 
             for (long i = 0; i < NUMBER_OF_MESSAGES; i++) {
+                String uuid = UUID.randomUUID().toString();
                 String publishingTimestamp = String.valueOf(Instant.now().toEpochMilli());
-                final int length = buffer.putStringWithoutLengthAscii(0, "Hello World! " + i + " " + publishingTimestamp);
+                String message = uuid + " " + publishingTimestamp;
+
+                final int length = buffer.putStringWithoutLengthAscii(0, message);
                 final long position = publication.offer(buffer, 0, length);
 
-                if (position > 0) {
-                    //System.out.println("Published message: " + i);
-                } else {
+                if (position <= 0) {
                     handlePublicationError(position);
-                }
 
-                // Simulate small delay between messages
-                Thread.sleep(10);
+                    Thread.sleep(100);
+                    i--;
+                    continue;
+                }
+                Thread.sleep(1);
             }
 
-            // End the timer
             long endTime = System.currentTimeMillis();
-            long totalTimeMillis = endTime - startTime;  // Total time in milliseconds
-            double totalTimeSeconds = totalTimeMillis / 1000.0;  // Convert to seconds
-
-            // Calculate throughput (messages per second)
+            long totalTimeMillis = endTime - startTime;
+            double totalTimeSeconds = totalTimeMillis / 1000.0;
             double throughput = NUMBER_OF_MESSAGES / totalTimeSeconds;
 
-            System.out.println("Total messages published: " + NUMBER_OF_MESSAGES);
+            System.out.println("Total UUID messages published: " + NUMBER_OF_MESSAGES);
             System.out.println("Total time: " + totalTimeSeconds + " seconds");
             System.out.println("Average throughput: " + throughput + " messages/second");
 
@@ -66,7 +67,6 @@ public class BasicPublisher implements CommandLineRunner {
     }
 
     private void handlePublicationError(long position) {
-        // Handle errors as before (unchanged)
         if (position == Publication.BACK_PRESSURED) {
             System.out.println("Offer failed due to back pressure");
         } else if (position == Publication.NOT_CONNECTED) {
@@ -82,5 +82,3 @@ public class BasicPublisher implements CommandLineRunner {
         }
     }
 }
-
-
