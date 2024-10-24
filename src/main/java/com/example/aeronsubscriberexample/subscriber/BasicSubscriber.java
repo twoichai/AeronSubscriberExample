@@ -25,12 +25,15 @@ public class BasicSubscriber implements CommandLineRunner {
                 .availableImageHandler(SamplesUtil::printAvailableImage)
                 .unavailableImageHandler(SamplesUtil::printUnavailableImage);
 
-        SamplesUtil samplesUtil = new SamplesUtil();  // Create an instance of SamplesUtil
-        final FragmentHandler fragmentHandler = samplesUtil.printAsciiMessage(STREAM_ID);  // Call the non-static method using the instance
+        SamplesUtil samplesUtil = new SamplesUtil();
+        final FragmentHandler fragmentHandler = samplesUtil.printAsciiMessage(STREAM_ID);
         final AtomicBoolean running = new AtomicBoolean(true);
 
-        // Register a SIGINT handler for graceful shutdown.
-        SigInt.register(() -> running.set(false));
+        // Register SIGINT handler to stop the subscriber
+        SigInt.register(() -> {
+            running.set(false);
+            samplesUtil.calculateAndPrintStatistics(); // Print statistics upon shutdown
+        });
 
         try (Aeron aeron = Aeron.connect(ctx);
              Subscription subscription = aeron.addSubscription(CHANNEL, STREAM_ID)) {
