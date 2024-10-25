@@ -3,7 +3,6 @@ package com.example.aeronsubscriberexample.publisher;
 import com.example.aeronsubscriberexample.config.SampleConfiguration;
 import io.aeron.Aeron;
 import io.aeron.Publication;
-import lombok.RequiredArgsConstructor;
 import org.agrona.BufferUtil;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.springframework.boot.CommandLineRunner;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.UUID;
-
 
 @Component
 public class BasicPublisher implements CommandLineRunner {

@@ -25,9 +25,9 @@ public class SamplesUtil {
 
     private static final Logger log = LoggerFactory.getLogger(SamplesUtil.class);
     private ConcurrentLinkedQueue<String> latencies = new ConcurrentLinkedQueue<>();
-    private int totalMessages = 0;  // Track total messages received
-    private long startTime = 0;     // Track when the app started
-    private long endTime = 0;       // Track when the app stopped
+    private int totalMessages = 0;
+    private long startTime = 0;
+    private long endTime = 0;
 
     public SamplesUtil() {
         startTime = System.currentTimeMillis();
