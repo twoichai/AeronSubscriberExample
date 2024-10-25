@@ -38,14 +38,15 @@ public class BasicPublisher implements CommandLineRunner {
                 final int length = buffer.putStringWithoutLengthAscii(0, message);
                 final long position = publication.offer(buffer, 0, length);
 
+                /**
                 if (position <= 0) {
-                    handlePublicationError(position);
+                    //handlePublicationError(position);
 
-                    Thread.sleep(100);
+                    //Thread.sleep(100);
                     i--;
                     continue;
-                }
-                Thread.sleep(1);
+                }**/
+                //Thread.sleep(1);
             }
 
             long endTime = System.currentTimeMillis();

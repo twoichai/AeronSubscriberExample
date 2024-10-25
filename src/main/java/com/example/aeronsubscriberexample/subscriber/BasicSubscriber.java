@@ -32,7 +32,7 @@ public class BasicSubscriber implements CommandLineRunner {
         // Register SIGINT handler to stop the subscriber
         SigInt.register(() -> {
             running.set(false);
-            samplesUtil.calculateAndPrintStatistics(); // Print statistics upon shutdown
+            //samplesUtil.calculateAndPrintStatistics(); // Print statistics upon shutdown
         });
 
         try (Aeron aeron = Aeron.connect(ctx);

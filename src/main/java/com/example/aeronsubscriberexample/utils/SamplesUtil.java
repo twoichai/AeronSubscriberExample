@@ -66,7 +66,6 @@ public class SamplesUtil {
                 long latency = receivingTimestamp - publishingTimestamp;
                 latencies.add(String.valueOf(latency));
 
-                // Increment the total message counter
                 totalMessages++;
 
                 //System.out.printf("Message to stream %d from session %d (%d@%d) <<%s>> - Latency: %d ms%n",streamId, header.sessionId(), length, offset, msg, latency);
@@ -86,7 +85,7 @@ public class SamplesUtil {
         log.info("Throughput: {} messages/second", throughput);
 
         // Calculate and print latency statistics
-        evaluateLatencies();
+        //evaluateLatencies();
     }
 
     private void evaluateLatencies() {
@@ -109,7 +108,7 @@ public class SamplesUtil {
                 long p50 = latencyValues.get((int) (latencyValues.size() * 0.5));
                 long p90 = latencyValues.get((int) (latencyValues.size() * 0.9));
                 long p99 = latencyValues.get((int) (latencyValues.size() * 0.99));
-
+                calculateAndPrintStatistics();
                 log.info("Latency Stats for the last minute:");
                 log.info("Average Latency: {} ms", avgLatency);
                 log.info("Max Latency: {} ms", maxLatency);
